@@ -301,6 +301,17 @@ body.theme-highcontrast{
 @media(min-width:760px){.home-actions{grid-template-columns:repeat(4,1fr)}.home-action{min-height:110px}}
 @media(max-width:430px){.navbtn{font-size:9px}.navbtn span{font-size:17px}.bottom-nav{padding-left:5px;padding-right:5px}.bottom-nav-inner{gap:2px}}
 
+.toast{
+  position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));z-index:100;
+  transform:translate(-50%,18px);opacity:0;pointer-events:none;
+  max-width:calc(100% - 32px);padding:11px 16px;border-radius:999px;
+  background:rgba(20,22,26,.96);color:#fff;border:1px solid var(--line);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);font-weight:850;text-align:center;
+  transition:opacity .2s ease,transform .2s ease;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+body.theme-light .toast{background:rgba(255,255,255,.98);color:#15171a}
+
 </style>
 </head>
 <body>
@@ -395,8 +406,8 @@ body.theme-highcontrast{
     <h3>Email preview</h3>
     <div id="preview" class="email-preview"></div>
     <div class="actions">
-      <button onclick="openEmail()">Open Email</button>
-      <button class="secondary" onclick="copyEmail()">Copy Text</button>
+      <button onclick="shareEmail()">📤 Share Order</button>
+      <button class="secondary" onclick="copyEmail()">📋 Copy Order</button>
       <button class="ghost" onclick="clearOrder()">Clear Order</button>
     </div>
   </div>
@@ -431,8 +442,8 @@ body.theme-highcontrast{
     <div id="nationalPreview" class="email-preview"></div>
 
     <div class="actions">
-      <button onclick="openNationalEmail()">Open Email</button>
-      <button class="secondary" onclick="copyNationalEmail()">Copy Text</button>
+      <button onclick="shareNationalEmail()">📤 Share Order</button>
+      <button class="secondary" onclick="copyNationalEmail()">📋 Copy Order</button>
       <button class="ghost" onclick="clearOrder()">Clear Order</button>
     </div>
   </div>
@@ -444,7 +455,7 @@ body.theme-highcontrast{
     <div class="history-toolbar">
       <div>
         <h2>Order History</h2>
-        <div class="muted">Orders are saved on this device when you tap Open Email.</div>
+        <div class="muted">Orders are saved on this device when you share or copy an order.</div>
       </div>
       <button class="ghost danger" onclick="clearHistory()">Clear All History</button>
     </div>
@@ -497,6 +508,8 @@ body.theme-highcontrast{
 </section>
 
 </main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <div class="bottom-nav">
   <div class="bottom-nav-inner">
@@ -742,55 +755,83 @@ function nationalEmailBody(){
   return text;
 }
 
-function openNationalEmail(){
+function orderSubject(isNational=false){
+  const entries=Object.values(order).filter(x=>x.qty>0);
+  const totalQty=entries.reduce((sum,item)=>sum+item.qty,0);
+  const technician=(isNational?$("nationalTechnicianName"):$("technicianName")).value.trim();
+  const techSuffix=technician?` - ${technician}`:"";
+  return entries.length
+    ? `Tech Pro Parts Order${techSuffix} - ${entries.length} Line Item${entries.length===1?"":"s"} / ${totalQty} Total`
+    : `Tech Pro Parts Order${techSuffix}`;
+}
+
+let toastTimer;
+function showToast(message){
+  const toast=$("toast");
+  if(!toast)return;
+  toast.textContent=message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+async function copyOrderText(text,type){
+  try{
+    await navigator.clipboard.writeText(text);
+    saveHistoryEntry(type);
+    showToast("📋 Order copied");
+    return true;
+  }catch{
+    alert("Copy was blocked. Select the preview text and copy it manually.");
+    return false;
+  }
+}
+
+async function shareOrder({type,to,subject,body}){
+  const shareText=`To: ${to}
+Subject: ${subject}
+
+${body}`;
+  if(navigator.share){
+    try{
+      await navigator.share({title:subject,text:shareText});
+      saveHistoryEntry(type);
+      showToast("📤 Order shared");
+      return;
+    }catch(error){
+      if(error && error.name==="AbortError")return;
+    }
+  }
+  const copied=await copyOrderText(shareText,type);
+  if(copied)alert("The order was copied. Open Outlook, start a new email, and paste it.");
+}
+
+async function shareNationalEmail(){
   const to=$("nationalRecipient").value.trim();
   if(!to){alert("Enter a recipient email.");return}
-
   const business=$("businessName").value.trim();
   const workOrder=$("workOrderNumber").value.trim();
   if(!business){alert("Enter the business name.");return}
   if(!workOrder){alert("Enter the work order number.");return}
-
   localStorage.setItem(KEY.email,to);
   localStorage.setItem(KEY.business,business);
   localStorage.setItem(KEY.workOrder,workOrder);
-
-  const entries=Object.values(order).filter(x=>x.qty>0);
-  const totalQty=entries.reduce((sum,item)=>sum+item.qty,0);
-  const technician=$("nationalTechnicianName").value.trim();
-  const techSuffix=technician?` - ${technician}`:"";
-  const subject=entries.length
-    ? `Tech Pro Parts Order${techSuffix} - ${entries.length} Line Item${entries.length===1?"":"s"} / ${totalQty} Total`
-    : `Tech Pro Parts Order${techSuffix}`;
-
-  saveHistoryEntry("national");
-  location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(nationalEmailBody())}`;
+  await shareOrder({type:"national",to,subject:orderSubject(true),body:nationalEmailBody()});
 }
 
 async function copyNationalEmail(){
-  try{await navigator.clipboard.writeText(nationalEmailBody());alert("Order text copied.");}
-  catch{alert("Copy was blocked. Select the preview text and copy it manually.");}
+  await copyOrderText(nationalEmailBody(),"national");
 }
 
-function openEmail(){
+async function shareEmail(){
   const to=$("recipient").value.trim();
   if(!to){alert("Enter a recipient email.");return}
   localStorage.setItem(KEY.email,to);
-
-  const entries=Object.values(order).filter(x=>x.qty>0);
-  const totalQty=entries.reduce((sum,item)=>sum+item.qty,0);
-  const technician=$("technicianName").value.trim();
-  const techSuffix=technician?` - ${technician}`:"";
-  const subject=entries.length
-    ? `Tech Pro Parts Order${techSuffix} - ${entries.length} Line Item${entries.length===1?"":"s"} / ${totalQty} Total`
-    : `Tech Pro Parts Order${techSuffix}`;
-
-  saveHistoryEntry("regular");
-  location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody())}`;
+  await shareOrder({type:"regular",to,subject:orderSubject(false),body:emailBody()});
 }
+
 async function copyEmail(){
-  try{await navigator.clipboard.writeText(emailBody());alert("Order text copied.");}
-  catch{alert("Copy was blocked. Select the preview text and copy it manually.");}
+  await copyOrderText(emailBody(),"regular");
 }
 function showView(name){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -916,7 +957,7 @@ function renderHistory(){
   root.innerHTML="";
 
   if(!orderHistory.length){
-    root.innerHTML=`<div class="empty">No saved orders yet. An order is saved when you tap Open Email.</div>`;
+    root.innerHTML=`<div class="empty">No saved orders yet. An order is saved when you share or copy it.</div>`;
     return;
   }
 
