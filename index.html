@@ -81,7 +81,7 @@ pre{white-space:pre-wrap;background:#0d0f12;border:1px solid var(--line);border-
   position:fixed;bottom:0;left:0;right:0;z-index:40;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
   background:rgba(12,13,16,.95);backdrop-filter:blur(16px);border-top:1px solid var(--line)
 }
-.bottom-nav-inner{max-width:800px;margin:auto;display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.bottom-nav-inner{max-width:800px;margin:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .navbtn{background:transparent;border:0;color:var(--muted);padding:8px 4px;font-size:12px;box-shadow:none}
 .navbtn span{display:block;font-size:20px;margin-bottom:2px}.navbtn.active{color:white;background:#252930}
 .machine-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
@@ -130,9 +130,9 @@ body.theme-highcontrast{
 
 
 .email-preview{
-  background:#f7f7f5;
-  color:#1d2128;
-  border:1px solid #d8dadd;
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--line);
   border-radius:16px;
   padding:22px;
   box-shadow:0 14px 34px rgba(0,0,0,.20);
@@ -143,16 +143,13 @@ body.theme-highcontrast{
   overflow-wrap:anywhere;
   min-height:180px;
 }
-body.theme-light .email-preview{
-  background:#fff;
-  color:#15171a;
-  border-color:#cfd5dd;
-}
-body.theme-midnight .email-preview,
-body.theme-highcontrast .email-preview{
-  background:#f8f9fb;
-  color:#111820;
-}
+
+.order-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:13px}
+.order-tab{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+.order-tab.active{background:linear-gradient(135deg,var(--red),var(--deep));color:#fff;border-color:transparent}
+.order-panel{display:none}
+.order-panel.active{display:block}
+
 .preview-title{
   font-weight:950;
   letter-spacing:.04em;
@@ -208,23 +205,21 @@ body.theme-highcontrast .email-preview{
   .part:first-child{border-top:1px solid var(--line)}
   .machine-grid{grid-template-columns:repeat(3,1fr)}
   #viewOrder>.card:nth-child(2),
-  #viewNational>.card:nth-child(2){padding:20px}
+  #orderPanelNational>.card:nth-child(2){padding:20px}
   .email-preview{font-size:16px;padding:26px}
 }
 @media (min-width:1024px){
-  #viewOrder,
-  #viewNational{
-    display:none;
-  }
-  #viewOrder.active,
-  #viewNational.active{
+  #viewOrder{display:none}
+  #viewOrder.active{display:block}
+  #orderPanelRegular.active,
+  #orderPanelNational.active{
     display:grid;
     grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
     gap:16px;
     align-items:start;
   }
-  #viewOrder.active .card,
-  #viewNational.active .card{margin-bottom:0}
+  #orderPanelRegular.active .card,
+  #orderPanelNational.active .card{margin-bottom:0}
   .bottom-nav-inner{max-width:920px}
 }
 @media (orientation:landscape) and (max-height:620px){
@@ -278,9 +273,21 @@ body.theme-highcontrast .email-preview{
   background:#8d2027!important;
 }
 @media(max-width:700px){
-  .bottom-nav-inner{overflow-x:auto;grid-template-columns:repeat(7,minmax(62px,1fr));padding-bottom:2px}
-  .bottom-nav-inner::-webkit-scrollbar{display:none}
+  .bottom-nav-inner{grid-template-columns:repeat(6,1fr);padding-bottom:2px}
 }
+
+.home-hero{padding:22px;background:linear-gradient(135deg,rgba(215,25,32,.24),rgba(255,255,255,.03))}
+.home-kicker{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.home-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}
+.home-action{min-height:92px;text-align:left;padding:15px;background:var(--panel2);border:1px solid var(--line)}
+.home-action span{display:block;font-size:25px;margin-bottom:8px}
+.home-action strong{display:block;font-size:15px}
+.home-action small{display:block;color:var(--muted);font-weight:600;margin-top:4px;line-height:1.3}
+.home-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.home-summary-box{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px;text-align:center}
+.home-summary-box strong{display:block;font-size:21px}.home-summary-box small{color:var(--muted);font-size:11px}
+@media(min-width:760px){.home-actions{grid-template-columns:repeat(4,1fr)}.home-action{min-height:110px}}
+@media(max-width:430px){.navbtn{font-size:9px}.navbtn span{font-size:17px}.bottom-nav{padding-left:5px;padding-right:5px}.bottom-nav-inner{gap:2px}}
 
 </style>
 </head>
@@ -293,7 +300,29 @@ body.theme-highcontrast .email-preview{
 </header>
 
 <main>
-<section id="viewSearch" class="view active">
+<section id="viewHome" class="view active">
+  <div class="card home-hero">
+    <div class="home-kicker">Field Technician Parts</div>
+    <h1>Welcome to Tech Pro</h1>
+    <div class="muted">Find Freestyle parts, build orders, and return to saved orders without opening the full catalog first.</div>
+    <div class="home-summary">
+      <div class="home-summary-box"><strong id="homePartCount">0</strong><small>Parts</small></div>
+      <div class="home-summary-box"><strong id="homeFavoriteCount">0</strong><small>Favorites</small></div>
+      <div class="home-summary-box"><strong id="homeCartCount">0</strong><small>In Order</small></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Quick actions</h2>
+    <div class="home-actions">
+      <button class="home-action" onclick="showView('Search')"><span>⌕</span><strong>Search Parts</strong><small>Search by name, part number, CONA, or machine.</small></button>
+      <button class="home-action" onclick="showView('Machines')"><span>▦</span><strong>Browse Machines</strong><small>Choose a Freestyle model and view matching parts.</small></button>
+      <button class="home-action" onclick="showView('Favorites')"><span>☆</span><strong>Favorites</strong><small>Open your saved frequently used parts.</small></button>
+      <button class="home-action" onclick="showView('Order')"><span>▣</span><strong>Orders</strong><small>Regular, National, and Order History.</small></button>
+    </div>
+  </div>
+</section>
+
+<section id="viewSearch" class="view">
   <div class="card hero">
     <h1>Freestyle parts, ready to order</h1>
     <div class="muted">Search the built-in catalog from the eight Freestyle machines supplied for this proof version.</div>
@@ -329,6 +358,13 @@ body.theme-highcontrast .email-preview{
 </section>
 
 <section id="viewOrder" class="view">
+  <div class="order-tabs">
+    <button class="order-tab active" data-order-panel="Regular" onclick="showOrderPanel('Regular')">Regular Order</button>
+    <button class="order-tab" data-order-panel="National" onclick="showOrderPanel('National')">National Order</button>
+    <button class="order-tab" data-order-panel="History" onclick="showOrderPanel('History')">History</button>
+  </div>
+  <div id="orderPanelRegular" class="order-panel active">
+
   <div class="card">
     <h2>Current order</h2>
     <div id="orderList"></div>
@@ -339,7 +375,7 @@ body.theme-highcontrast .email-preview{
       <div><label>Technician name</label><input id="technicianName" placeholder="Enter technician name"></div>
     </div>
     <div class="grid2">
-      <div><label>Send to</label><input id="recipient" type="email" value="Masonmentzer2001@gmail.com"></div>
+      <div><label>Send to</label><input id="recipient" type="email" ></div>
       <div></div>
     </div>
     <label>Optional notes</label>
@@ -352,10 +388,10 @@ body.theme-highcontrast .email-preview{
       <button class="ghost" onclick="clearOrder()">Clear Order</button>
     </div>
   </div>
-</section>
 
+  </div>
+  <div id="orderPanelNational" class="order-panel">
 
-<section id="viewNational" class="view">
   <div class="card">
     <h2>National Order</h2>
     <div class="muted">Uses the same cart, with the business and city entered together, plus the work-order number.</div>
@@ -374,7 +410,7 @@ body.theme-highcontrast .email-preview{
     </div>
 
     <label>Send to</label>
-    <input id="nationalRecipient" type="email" value="Masonmentzer2001@gmail.com">
+    <input id="nationalRecipient" type="email" >
 
     <label>Optional notes</label>
     <textarea id="nationalNotes" rows="3" placeholder="Optional notes"></textarea>
@@ -388,10 +424,10 @@ body.theme-highcontrast .email-preview{
       <button class="ghost" onclick="clearOrder()">Clear Order</button>
     </div>
   </div>
-</section>
 
+  </div>
+  <div id="orderPanelHistory" class="order-panel">
 
-<section id="viewHistory" class="view">
   <div class="card">
     <div class="history-toolbar">
       <div>
@@ -401,6 +437,8 @@ body.theme-highcontrast .email-preview{
       <button class="ghost danger" onclick="clearHistory()">Clear All History</button>
     </div>
     <div id="historyList"></div>
+  </div>
+
   </div>
 </section>
 
@@ -450,12 +488,11 @@ body.theme-highcontrast .email-preview{
 
 <div class="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="navbtn active" data-view="Search"><span>⌕</span>Search</button>
+    <button class="navbtn active" data-view="Home"><span>⌂</span>Home</button>
+    <button class="navbtn" data-view="Search"><span>⌕</span>Search</button>
     <button class="navbtn" data-view="Machines"><span>▦</span>Machines</button>
     <button class="navbtn" data-view="Favorites"><span>☆</span>Favorites</button>
     <button class="navbtn" data-view="Order"><span>▣</span>Order</button>
-    <button class="navbtn" data-view="National"><span>⌁</span>National</button>
-    <button class="navbtn" data-view="History"><span>↻</span>History</button>
     <button class="navbtn" data-view="Settings"><span>⚙</span>Settings</button>
   </div>
 </div>
@@ -747,8 +784,15 @@ function showView(name){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===name));
   $("view"+name).classList.add("active");
+  if(name==="Home")renderHome();
   if(name==="Favorites")renderFavorites();
-  if(name==="Order")renderOrder();
+  if(name==="Order"){renderOrder();renderNationalOrder();renderHistory();}
+}
+function showOrderPanel(name){
+  document.querySelectorAll(".order-panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".order-tab").forEach(b=>b.classList.toggle("active",b.dataset.orderPanel===name));
+  $("orderPanel"+name).classList.add("active");
+  if(name==="Regular")renderOrder();
   if(name==="National")renderNationalOrder();
   if(name==="History")renderHistory();
 }
@@ -948,7 +992,8 @@ function restoreHistoryOrder(id){
 
   save();
   renderAll();
-  showView(entry.type==="national"?"National":"Order");
+  showView("Order");
+  showOrderPanel(entry.type==="national"?"National":"Regular");
 }
 
 function deleteHistoryEntry(id){
@@ -967,20 +1012,28 @@ function clearHistory(){
 }
 
 
-function renderAll(){renderSearch();renderFavorites();renderOrder();renderNationalOrder()}
+function renderHome(){
+  if($("homePartCount")) $("homePartCount").textContent=CATALOG.length.toLocaleString();
+  if($("homeFavoriteCount")) $("homeFavoriteCount").textContent=favorites.length.toLocaleString();
+  const totalQty=Object.values(order).reduce((sum,item)=>sum+(Number(item.qty)||0),0);
+  if($("homeCartCount")) $("homeCartCount").textContent=totalQty.toLocaleString();
+}
+
+function renderAll(){renderHome();renderSearch();renderFavorites();renderOrder();renderNationalOrder()}
 
 function init(){
   $("partCount").textContent=`${CATALOG.length.toLocaleString()} unique parts`;
   $("modelFilter").innerHTML=`<option value="">All Freestyle models</option>`+MODELS.map(m=>`<option>${esc(m)}</option>`).join("");
   $("orderDate").value=localStorage.getItem(KEY.date)||today();
-  $("recipient").value=localStorage.getItem(KEY.email)||"Masonmentzer2001@gmail.com";
+  if(localStorage.getItem(KEY.email)==="Masonmentzer2001@gmail.com") localStorage.removeItem(KEY.email);
+  $("recipient").value=localStorage.getItem(KEY.email)||"";
   $("notes").value=localStorage.getItem(KEY.notes)||"";
   const savedTech=localStorage.getItem(KEY.tech)||"";
   $("technicianName").value=savedTech;
   $("nationalTechnicianName").value=savedTech;
   $("settingsTechName").value=savedTech;
   $("nationalOrderDate").value=localStorage.getItem(KEY.date)||today();
-  $("nationalRecipient").value=localStorage.getItem(KEY.email)||"Masonmentzer2001@gmail.com";
+  $("nationalRecipient").value=localStorage.getItem(KEY.email)||"";
   $("businessName").value=localStorage.getItem(KEY.business)||"";
   $("workOrderNumber").value=localStorage.getItem(KEY.workOrder)||"";
   $("nationalNotes").value=localStorage.getItem(KEY.nationalNotes)||"";
